@@ -97,7 +97,7 @@ def quadratically_regularized_pca(X, n_comps=20, alpha=1.0, tolerance=0.001):
         predX = predW[:,np.newaxis] @ c
         pred_diff = predX - Xfit
         err = np.power(np.linalg.norm(pred_diff, ord='fro'), 2)
-        l2_reg = alpha * np.sum(np.power(np.linalg.norm(predW), 2)) + alpha * np.sum(np.power(np.linalg.norm(c), 2))
+        l2_reg = alpha * np.sum(np.power(np.linalg.norm(predW), 2))# + alpha * np.sum(np.power(np.linalg.norm(c), 2))
         cost = err + l2_reg
         return cost
 
@@ -105,7 +105,7 @@ def quadratically_regularized_pca(X, n_comps=20, alpha=1.0, tolerance=0.001):
         predX = w @ predC[np.newaxis,:]
         pred_diff = predX - Xfit
         err = np.power(np.linalg.norm(pred_diff, ord='fro'), 2)
-        l2_reg = alpha * np.sum(np.power(np.linalg.norm(w), 2)) + alpha * np.sum(np.power(np.linalg.norm(predC), 2))
+        l2_reg = alpha * np.sum(np.power(np.linalg.norm(predC), 2))# + alpha * np.sum(np.power(np.linalg.norm(w), 2))
         cost = err + l2_reg
         return cost
 
@@ -132,7 +132,7 @@ def sparse_pca(X, n_comps=20, alpha=1.0, tolerance=0.001):
         predX = predW[:,np.newaxis] @ c
         pred_diff = predX - Xfit
         err = np.power(np.linalg.norm(pred_diff, ord='fro'), 2)
-        l2_reg = alpha * np.sum(np.linalg.norm(predW, ord=1)) + alpha * np.sum(np.linalg.norm(c, ord=1))
+        l2_reg = alpha * np.sum(np.linalg.norm(predW, ord=1))# + alpha * np.sum(np.linalg.norm(c, ord=1))
         cost = err + l2_reg
         return cost
 
@@ -140,7 +140,7 @@ def sparse_pca(X, n_comps=20, alpha=1.0, tolerance=0.001):
         predX = w @ predC[np.newaxis,:]
         pred_diff = predX - Xfit
         err = np.power(np.linalg.norm(pred_diff, ord='fro'), 2)
-        l2_reg = alpha * np.sum(np.linalg.norm(w, ord=1)) + alpha * np.sum(np.linalg.norm(predC, ord=1))
+        l2_reg = alpha * np.sum(np.linalg.norm(predC, ord=1))# + alpha * np.sum(np.linalg.norm(w, ord=1))
         cost = err + l2_reg
         return cost
 
