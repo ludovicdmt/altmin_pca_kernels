@@ -12,7 +12,7 @@ end
 function cost = compute_cost_func_w(predW, c, Xfit, alpha)
     predX = predW * c;
     pred_diff = predX - Xfit;
-    err = norm(pred_diff, 'fro') ^ 2;
+    err = (norm(pred_diff, 'fro')) ^ 2;
     l1_reg = alpha * sum(norm(predW, 1)) + alpha * sum(norm(c, 1));
     cost = err + l1_reg;
 end
@@ -20,7 +20,7 @@ end
 function cost = compute_cost_func_c(predC, w, Xfit, alpha)
     predX = w * predC;
     pred_diff = predX - Xfit;
-    err = norm(pred_diff, 'fro') ^ 2;
+    err = (norm(pred_diff, 'fro')) ^ 2;
     l1_reg = alpha * sum(norm(w, 1)) + alpha * sum(norm(predC, 1));
     cost = err + l1_reg;
 end
