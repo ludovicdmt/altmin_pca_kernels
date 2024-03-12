@@ -28,11 +28,11 @@ def _fit(X, n_comps, tolerance, cost_func_w, cost_func_c):
             last_err = err
 
             # Optimize w - one step
-            res = opt.minimize(cost_func_w, w, args=(c, Xfit), method='CG', options={'maxiter': 1})
+            res = opt.minimize(cost_func_w,  np.squeeze(w), args=(c, Xfit), method='CG', options={'maxiter': 1})
             w = np.reshape(res.x, (n_observations, 1))
 
             # Optimize c - one step
-            res = opt.minimize(cost_func_c, c, args=(w, Xfit), method='CG', options={'maxiter': 1})
+            res = opt.minimize(cost_func_c,  np.squeeze(c), args=(w, Xfit), method='CG', options={'maxiter': 1})
             c = np.reshape(res.x, (1, n_features))
 
             # update error and count
