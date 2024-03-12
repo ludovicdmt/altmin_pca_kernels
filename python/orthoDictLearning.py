@@ -51,9 +51,6 @@ class OrthoDictLearning(BaseEstimator, TransformerMixin):
     def __init__(self, n_comps, alpha1 = 10.0, alpha2= 10.0, reg='l1', tolerance=0.001, verbose=0):
         """Initialize the model."""
         assert reg in ['l1', 'l2', 'None'], "Regularization type must be 'l1' or 'l2'."
-        if (alpha2 != 0):
-            assert y is not None, "Discriminative regularization requires class labels."
-
         self.n_comps = n_comps
         self.alpha1 = alpha1
         self.alpha2 = alpha2
@@ -105,20 +102,31 @@ class OrthoDictLearning(BaseEstimator, TransformerMixin):
             iter = 1
             last_err = 0
             err = np.linalg.norm(np.dot(w, c) - Xfit, ord='fro')
-
+            last_loss = 2*self.tolerance
+            loss = 0
+            diff_loss = np.abs(loss - last_loss)
             # while the reconstruction error (not the optimized loss) is progressing, do
-            while np.abs(err - last_err) > self.tolerance:
-                last_err = err
+            while (diff_loss > self.tolerance) and (np.abs(err - last_err)) and iter < 15:
+                if (self.verbose == 2) and (iter > 1):
+                    print(f"Iter {iter}, Difference = {diff_loss}, Reconstruction error: {np.abs(err - last_err)}")
 
+                if iter < 5:
+                    maxiter = 5
+                elif 5 <= iter < 10:
+                    maxiter = 3
+                else:
+                    maxiter = 1
                 # Optimize the weight matrix - one step
-                res = opt.minimize(self._cost_func_w, np.squeeze(w), args=(c, Xfit, y), method='CG', options={'maxiter': 1})
+                res = opt.minimize(self._cost_func_w, np.squeeze(w), args=(c, Xfit, y), method='CG', options={'maxiter': maxiter})
+                loss += res.fun
                 w = np.reshape(res.x, (n_observations, 1))
 
                 # proximal projection to ensure positivity of the weights
                 # w = np.maximum(w, 0)
 
                 # Optimize the components - one step
-                res = opt.minimize(self._cost_func_c, np.squeeze(c), args=(w, Xfit), method='CG', options={'maxiter': 1})
+                res = opt.minimize(self._cost_func_c, np.squeeze(c), args=(w, Xfit), method='CG', options={'maxiter': maxiter})
+                loss += res.fun
                 c = np.reshape(res.x, (1, n_features))
                 # normalization
                 c /= np.linalg.norm(c)
@@ -129,6 +137,9 @@ class OrthoDictLearning(BaseEstimator, TransformerMixin):
                 # update error of reconstruction (different from the loss function!)
                 pred_diff = np.dot(w, c) - Xfit
                 err = np.linalg.norm(pred_diff, ord='fro')
+                diff_loss = np.abs(loss - last_loss)
+                last_loss = np.copy(loss)
+                loss = 0
                 iter = iter + 1
 
             if self.verbose > 0:
@@ -211,12 +222,11 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     # Generate random data
-    X = np.random.normal(size=(100, 10))
     X, y = make_blobs(n_samples=100, n_features=10, centers=3, random_state=42)
     X=StandardScaler().fit_transform(X)
 
     # Run the dictionary learning
-    model = OrthoDictLearning(n_comps=3, alpha1=5, alpha2=20, reg='l1')
+    model = OrthoDictLearning(n_comps=3, alpha1=5, alpha2=20, reg='l1', verbose=2)
     model.fit(X, y)
     X_proj = model.transform(X)
     W_opt = model.weights_
