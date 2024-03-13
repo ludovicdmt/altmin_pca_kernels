@@ -10,6 +10,8 @@ __author__ = "Ludovic Darmet"
 import numpy as np
 from scipy import optimize as opt
 from pyemd import emd_samples
+from scipy.stats import norm
+from scipy.spatial.distance import euclidean
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
@@ -50,7 +52,7 @@ class OrthoDictLearning(BaseEstimator, TransformerMixin):
 
     def __init__(self, n_comps, alpha1 = 10.0, alpha2= 10.0, reg='l1', tolerance=0.001, verbose=0):
         """Initialize the model."""
-        assert reg in ['l1', 'l2', 'None'], "Regularization type must be 'l1' or 'l2'."
+        assert reg in ['l1', 'l2', None], "Regularization type must be 'l1' or 'l2' or None."
         self.n_comps = n_comps
         self.alpha1 = alpha1
         self.alpha2 = alpha2
@@ -88,7 +90,6 @@ class OrthoDictLearning(BaseEstimator, TransformerMixin):
 
         W = np.zeros((n_observations, self.n_comps))
         C = np.zeros((self.n_comps, n_features))
-
         Xfit = np.copy(X)
 
         # Fit one component at a time
@@ -106,7 +107,7 @@ class OrthoDictLearning(BaseEstimator, TransformerMixin):
             loss = 0
             diff_loss = np.abs(loss - last_loss)
             # while the reconstruction error (not the optimized loss) is progressing, do
-            while (diff_loss > self.tolerance) and (np.abs(err - last_err)) and iter < 15:
+            while (diff_loss > self.tolerance) and (np.abs(err - last_err)) and iter < 25:
                 if (self.verbose == 2) and (iter > 1):
                     print(f"Iter {iter}, Difference = {diff_loss}, Reconstruction error: {np.abs(err - last_err)}")
 
@@ -116,6 +117,7 @@ class OrthoDictLearning(BaseEstimator, TransformerMixin):
                     maxiter = 3
                 else:
                     maxiter = 1
+
                 # Optimize the weight matrix - one step
                 res = opt.minimize(self._cost_func_w, np.squeeze(w), args=(c, Xfit, y), method='CG', options={'maxiter': maxiter})
                 loss += res.fun
@@ -199,7 +201,16 @@ class OrthoDictLearning(BaseEstimator, TransformerMixin):
                 class_subsample = predW[y == class_]
                 rest_subsample = predW[y != class_]
                 # Wasserstein distance for the class at hand vs the rest
-                reg_dis += self.alpha2/len(classes) * emd_samples(class_subsample, rest_subsample)
+                # It should be maximized so we are computing the inverse
+                # reg_dis += self.alpha2/len(classes) * 1/emd_samples(class_subsample, rest_subsample)
+
+                # Fit a Gaussian on the activations of the class
+                mu, std = norm.fit(class_subsample)
+                # Compute the log-likelihood of the activations of the rest of the classes
+                log_likelihood = np.sum(norm.logpdf(rest_subsample, loc=mu, scale=std))
+                # Minimize the log-likelihood
+                # As LL should be negative, we would minimize 1/abs(LL)
+                reg_dis += self.alpha2/len(classes) * 1/np.abs(log_likelihood)
         else:
             reg_dis = 0
         # print(f"Cost: {cost}, reg_activ: {reg_activ}, reg_dis: {reg_dis}")
