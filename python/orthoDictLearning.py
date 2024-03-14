@@ -9,9 +9,6 @@ __author__ = "Ludovic Darmet"
 
 import numpy as np
 from scipy import optimize as opt
-from pyemd import emd_samples
-from scipy.stats import norm
-from scipy.spatial.distance import euclidean
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
