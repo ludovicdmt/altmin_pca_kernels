@@ -23,7 +23,7 @@ class OrthoDictLearning(BaseEstimator, TransformerMixin):
     
    Parameters
     ----------
-    n_comps : int
+    n_components : int
         Number of components to fit.
     alpha1 : float, optional
         Regularization parameter for sparsity. Default is 10.0.
@@ -41,14 +41,14 @@ class OrthoDictLearning(BaseEstimator, TransformerMixin):
         weights for each sample
     error_ : array
         vector of errors at each iteration
-    n_comps : int
+    n_components : int
         Number of features seen during :term:`fit`.
     """
 
-    def __init__(self, n_comps, alpha1 = 10.0, reg='l1', tolerance=0.001, verbose=0):
+    def __init__(self, n_components, alpha1 = 10.0, reg='l1', tolerance=0.001, verbose=0):
         """Initialize the model."""
         assert reg in ['l1', 'l2', None], "Regularization type must be 'l1' or 'l2' or None."
-        self.n_comps = n_comps
+        self.n_components = n_components
         self.alpha1 = alpha1
         self.reg = reg
         self.tolerance = tolerance
@@ -80,12 +80,12 @@ class OrthoDictLearning(BaseEstimator, TransformerMixin):
         n_observations = X.shape[0]
         n_features = X.shape[1]
 
-        W = np.zeros((n_observations, self.n_comps))
-        C = np.zeros((self.n_comps, n_features))
+        W = np.zeros((n_observations, self.n_components))
+        C = np.zeros((self.n_components, n_features))
         Xfit = np.copy(X)
 
         # Fit one component at a time
-        for comp_idx in range(self.n_comps):
+        for comp_idx in range(self.n_components):
 
             # Initialize weights and components randomly
             # TODO: Initialize with SVD
@@ -226,7 +226,7 @@ if __name__ == "__main__":
     X=StandardScaler().fit_transform(X)
 
     # Run the dictionary learning
-    model = OrthoDictLearning(n_comps=3, alpha1=5, reg='l1', verbose=2)
+    model = OrthoDictLearning(n_components=3, alpha1=5, reg='l1', verbose=2)
     model.fit(X, y)
     X_proj = model.transform(X)
     W_opt = model.weights_
